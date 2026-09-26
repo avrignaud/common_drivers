@@ -1,0 +1,94 @@
+# Test build for CoreELEC/common_drivers#42: rebuild the Amlogic-no kernel of an
+# official CoreELEC nightly from its exact revision, unpatched and patched, check
+# the module ABI against the official SYSTEM, and publish an update tar that is
+# the official nightly with only target/KERNEL swapped.
+name: Test kernel build (HPD suspend-state leak fix)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ce_commit:
+        description: CoreELEC/CoreELEC commit the nightly was built from (BUILD_ID)
+        default: cb01a8989c75486ff0cfc7cbab7bcd6c20cfbc7f
+      base_cd:
+        description: common_drivers commit that CoreELEC commit pins
+        default: 23b23cb6b709d53a5b7cb2cc6984f0c4d16bb125
+      patched_cd:
+        description: common_drivers commit to build instead (base + fix)
+        default: 48e62bf2932c98e48d18569ff0a1d73e25924eda
+      official_tar_url:
+        description: the official nightly's update tar
+        default: https://archive.coreelec.org/Amlogic-no/CE-22/20260926/CoreELEC-Amlogic-no.aarch64-22.0-Piers_nightly_20260926.tar
+      release_tag:
+        description: GitHub release tag to publish to
+        default: test-hpd-leak-fix-nightly_20260926
+      build_unpatched:
+        description: also build the unpatched kernel first (reproducibility check)
+        type: boolean
+        default: true
+  push:
+    branches: [ci-test-build]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    env:
+      CE_COMMIT: ${{ inputs.ce_commit || 'cb01a8989c75486ff0cfc7cbab7bcd6c20cfbc7f' }}
+      BASE_CD: ${{ inputs.base_cd || '23b23cb6b709d53a5b7cb2cc6984f0c4d16bb125' }}
+      PATCHED_CD: ${{ inputs.patched_cd || '48e62bf2932c98e48d18569ff0a1d73e25924eda' }}
+      PATCHED_CD_REPO: ${{ github.repository }}
+      OFFICIAL_TAR_URL: ${{ inputs.official_tar_url || 'https://archive.coreelec.org/Amlogic-no/CE-22/20260926/CoreELEC-Amlogic-no.aarch64-22.0-Piers_nightly_20260926.tar' }}
+      RELEASE_TAG: ${{ inputs.release_tag || 'test-hpd-leak-fix-nightly_20260926' }}
+      BUILD_UNPATCHED: ${{ format('{0}', inputs.build_unpatched) != 'false' && 'yes' || 'no' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune -af >/dev/null 2>&1 || true
+          df -h /
+
+      - name: Install CoreELEC build dependencies
+        run: |
+          sudo apt-get update -q
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends \
+            bash bc bzip2 curl diffutils gawk gcc g++ gperf gzip file patchutils lzop make patch perl \
+            rdfind rsync sed tar unzip xz-utils zip zstd libncurses5-dev libc6-dev libjson-perl \
+            libparse-yapp-perl libxml-parser-perl python3 squashfs-tools kmod xmlstarlet binutils
+          nproc; free -g; df -h /
+
+      - name: Build
+        run: |
+          mkdir -p "$RUNNER_TEMP/work"
+          WORK="$RUNNER_TEMP/work" OUT="$GITHUB_WORKSPACE/out" bash ci/build-test-kernel.sh
+
+      - name: Upload build outputs (also on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-kernel-build
+          path: out/
+          if-no-files-found: warn
+
+      - name: Publish GitHub release
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          rm -f build-*.log
+          TITLE="Test kernel: HPD suspend-state leak fix on nightly_20260926 (PR #42)"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --clobber -- *
+            gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --notes-file BUILD-NOTES.md
+          else
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --prerelease --title "$TITLE" --notes-file BUILD-NOTES.md -- *
+          fi
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json url,assets --jq '.url, (.assets[] | "\(.name) \(.size)")'
