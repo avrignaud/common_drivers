@@ -1,0 +1,32 @@
+409:2026-09-27T01:26:17.5241273Z === official nightly: https://archive.coreelec.org/Amlogic-no/CE-22/20260926/CoreELEC-Amlogic-no.aarch64-22.0-Piers_nightly_20260926.tar  [01:26:17Z]
+413:2026-09-27T01:29:29.1254509Z === official KERNEL boot image  [01:29:29Z]
+414:2026-09-27T01:29:29.1547843Z boot image: total=24287232 page=2048 hdr_ver=0 os_ver=0x0 name='' cmdline=''
+416:2026-09-27T01:29:29.1549432Z   kernel=16974650 bytes (head 894c5a4f)
+417:2026-09-27T01:29:29.1549875Z   ramdisk=7308290 bytes (head 28b52ffd)
+418:2026-09-27T01:29:29.4994821Z official: Linux version 5.15.196 (docker@2cbe31e1f425) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Sat Sep 26 01:32:28 IDT 2026
+420:2026-09-27T01:29:29.5005336Z === official modules (unsquashfs)  [01:29:29Z]
+421:2026-09-27T01:29:29.6541933Z official modules: /home/runner/work/_temp/work/official-sys/usr/lib/kernel-overlays/base/lib/modules/5.15.196 (903 .ko)
+423:2026-09-27T01:29:29.6568755Z === CoreELEC cb01a8989c75486ff0cfc7cbab7bcd6c20cfbc7f  [01:29:29Z]
+499:2026-09-27T01:29:48.6991727Z pre-seeded gmp: gmp-6.3.0.tar.xz
+501:2026-09-27T01:29:48.7005377Z === build linux (unpatched)  [01:29:48Z]
+1358:2026-09-27T02:40:09.6204964Z boot image: total=24274944 page=2048 hdr_ver=0 os_ver=0x0 name='' cmdline=''
+1360:2026-09-27T02:40:09.6206231Z   kernel=16974438 bytes (head 894c5a4f)
+1361:2026-09-27T02:40:09.6206560Z   ramdisk=7295236 bytes (head 28b52ffd)
+1362:2026-09-27T02:40:09.9697417Z unpatched: Linux version 5.15.196 (runner@runnervmtr4k5) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Sun Sep 27 02:23:19 UTC 2026
+1364:2026-09-27T02:40:09.9707613Z === module ABI check (unpatched) against the official SYSTEM's modules  [02:40:09Z]
+1365:2026-09-27T02:40:12.0423758Z [unpatched] official modules: 903; symbol CRCs checked: 36428; match rebuilt kernel: 33798; MISMATCH: 0; not in rebuilt Module.symvers: 2630
+1366:2026-09-27T02:40:12.0424667Z [unpatched] official vermagic(s): 5.15.196 SMP preempt mod_unload modversions aarch64
+1367:2026-09-27T02:40:12.0425329Z [unpatched] same-named modules rebuilt: 798; srcversion identical: 99, different: 0, absent: 699
+1369:2026-09-27T02:40:12.0952732Z === clean linux + common_drivers before the patched build  [02:40:12Z]
+1378:2026-09-27T02:40:25.1029128Z === switch common_drivers to avrignaud/common_drivers@48e62bf2932c98e48d18569ff0a1d73e25924eda  [02:40:25Z]
+1382:2026-09-27T02:40:25.1064586Z === build linux (patched)  [02:40:25Z]
+2182:2026-09-27T02:57:15.2631078Z boot image: total=24274944 page=2048 hdr_ver=0 os_ver=0x0 name='' cmdline=''
+2184:2026-09-27T02:57:15.2632025Z   kernel=16974786 bytes (head 894c5a4f)
+2185:2026-09-27T02:57:15.2632332Z   ramdisk=7295237 bytes (head 28b52ffd)
+2186:2026-09-27T02:57:15.6074717Z patched: Linux version 5.15.196 (runner@runnervmtr4k5) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Sun Sep 27 02:40:43 UTC 2026
+2188:2026-09-27T02:57:15.6085037Z === module ABI check (patched) against the official SYSTEM's modules  [02:57:15Z]
+2189:2026-09-27T02:57:15.9044627Z [patched] official modules: 903; symbol CRCs checked: 36428; match rebuilt kernel: 33798; MISMATCH: 0; not in rebuilt Module.symvers: 2630
+2190:2026-09-27T02:57:15.9045334Z [patched] official vermagic(s): 5.15.196 SMP preempt mod_unload modversions aarch64
+2191:2026-09-27T02:57:15.9045842Z [patched] same-named modules rebuilt: 798; srcversion identical: 99, different: 0, absent: 699
+2193:2026-09-27T02:57:15.9550178Z === verify the patch is in the patched tree  [02:57:15Z]
+2195:2026-09-27T02:57:16.3988295Z FATAL: old stack copy still present
