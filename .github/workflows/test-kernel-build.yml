@@ -76,6 +76,27 @@ jobs:
           path: out/
           if-no-files-found: warn
 
+      # Artifacts and job logs need a signed-in GitHub session; release assets do
+      # not. On failure, publish the build logs as a prerelease so they can be
+      # read anonymously.
+      - name: Publish logs on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p faillogs
+          for f in out/build-*.log; do
+            [ -f "$f" ] || continue
+            cp "$f" faillogs/
+            tail -300 "$f" > "faillogs/$(basename "$f" .log)-tail.txt"
+          done
+          ls -la faillogs || true
+          TAG="ci-logs-run-${GITHUB_RUN_ID}"
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
+            --title "CI logs for failed run $GITHUB_RUN_ID" \
+            --notes "Build logs of failed run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            faillogs/* || true
+
       - name: Publish GitHub release
         if: success()
         env:

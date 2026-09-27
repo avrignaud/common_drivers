@@ -74,6 +74,25 @@ LINUX_VER=$(grep -E '^PKG_VERSION=' projects/Amlogic-ce/packages/linux/package.m
 [ -n "$LINUX_VER" ] || die "cannot read the linux package version"
 yes | ./scripts/checkdeps || true
 
+# gmplib.org times out from GitHub's runner addresses and CoreELEC's two
+# mirrors 404 for gmp; the first run burned an hour retrying. Add the GNU
+# mirror (its gnu/<pkg>/<file> layout matches the mirror pattern) and pre-seed
+# gmp from it with the stamps scripts/get_archive expects.
+sed -i 's|^\(\s*DISTRO_MIRROR="[^"]*\)"|\1 https://ftp.gnu.org/gnu"|' config/options distributions/CoreELEC/options
+grep -n 'DISTRO_MIRROR=' config/options distributions/CoreELEC/options
+preseed() {   # $1 pkg  $2 url of the exact file
+    local pkg=$1 url=$2 mk ver sha name
+    mk=$(find packages projects -path "*/$pkg/package.mk" | head -1)
+    ver=$(grep -E '^PKG_VERSION=' "$mk" | cut -d'"' -f2); sha=$(grep -E '^PKG_SHA256=' "$mk" | cut -d'"' -f2)
+    name="$pkg-$ver.${url##*"$ver".}"
+    mkdir -p "sources/$pkg"
+    curl -fsSL --retry 3 -o "sources/$pkg/$name" "$url"
+    echo "$sha  sources/$pkg/$name" | sha256sum -c - || die "pre-seeded $name does not match PKG_SHA256"
+    echo "$url" >"sources/$pkg/$name.url"; echo "$sha" >"sources/$pkg/$name.sha256"
+    echo "pre-seeded $pkg: $name"
+}
+preseed gmp https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz
+
 build_kernel() {   # $1 = label
     local label=$1 rc
     log "build linux ($label)"

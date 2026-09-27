@@ -15,3 +15,9 @@ the official nightly with only `target/KERNEL` and `target/KERNEL.md5` replaced.
 
 The fix under test lives on branch `fix-hpd-suspend-state-leak`; nothing on
 this branch touches kernel source.
+
+Run 1 (36280393460) failed fetching gmp: gmplib.org times out from GitHub's
+runner addresses and both CoreELEC mirrors 404 for `gmp-6.3.0.tar.xz`. The
+script now adds `https://ftp.gnu.org/gnu` as a mirror and pre-seeds gmp from
+it. On failure the workflow publishes its logs as a public prerelease
+(`ci-logs-run-<id>`), since job logs and artifacts need a signed-in session.
