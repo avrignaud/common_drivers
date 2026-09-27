@@ -65,8 +65,9 @@ jobs:
 
       - name: Build
         run: |
-          mkdir -p "$RUNNER_TEMP/work"
-          WORK="$RUNNER_TEMP/work" OUT="$GITHUB_WORKSPACE/out" bash ci/build-test-kernel.sh
+          mkdir -p "$RUNNER_TEMP/work" out
+          set -o pipefail
+          WORK="$RUNNER_TEMP/work" OUT="$GITHUB_WORKSPACE/out" bash ci/build-test-kernel.sh 2>&1 | tee out/script.log
 
       - name: Upload build outputs (also on failure)
         if: always()
@@ -87,9 +88,10 @@ jobs:
           mkdir -p faillogs
           for f in out/build-*.log; do
             [ -f "$f" ] || continue
-            cp "$f" faillogs/
             tail -300 "$f" > "faillogs/$(basename "$f" .log)-tail.txt"
+            gzip -c "$f" > "faillogs/$(basename "$f").gz"
           done
+          cp out/script.log out/*.txt out/BUILD-NOTES.md out/Module.symvers-* faillogs/ 2>/dev/null || true
           ls -la faillogs || true
           TAG="ci-logs-run-${GITHUB_RUN_ID}"
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \

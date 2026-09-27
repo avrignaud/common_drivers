@@ -153,7 +153,8 @@ log "verify the patch is in the patched tree"
 SRC=$(find "$PWD" -maxdepth 7 -type f -path "*/build/linux-$LINUX_VER/common_drivers/drivers/drm/meson_hdmi.c" | head -1)
 [ -n "$SRC" ] || die "meson_hdmi.c not found in build tree"
 grep -n 'if (!drm->mode_config.suspend_state)' "$SRC" || die "patched hunk missing from $SRC"
-grep -c 'struct drm_mode_config mode_config = drm->mode_config;' "$SRC" | grep -qx 0 || die "old stack copy still present"
+# (not `grep -c … | grep -qx 0`: under pipefail grep -c exits 1 on a zero count and the pipeline "fails")
+! grep -q 'struct drm_mode_config mode_config = drm->mode_config;' "$SRC" || die "old stack copy still present"
 note ""
 note "Patch presence: \`$(grep -n 'if (!drm->mode_config.suspend_state)' "$SRC" | head -1 | cut -d: -f1,2)\` in the patched build tree's meson_hdmi.c; the common_drivers .scmversion in the tree is \`$(cat "$(dirname "$SRC")/../../.scmversion" 2>/dev/null || echo '?')\`."
 
